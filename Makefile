@@ -3,11 +3,15 @@
 
 CFLAGS = -static -Os -o
 SFLAGS = --strip-unneeded --remove-section=.comment --remove-section=.note --remove-section=.gnu.version
-DOCKER_ID_USER = ${DOCKER_ID_USER}
+MANDATORY = gcc strip upx docker
 
 default: build
 
-mkdir:
+check:
+	$(if $(shell echo $(DOCKER_ID_USER)),, $(error "DOCKER_ID_USER is not set"))
+	$(foreach exec, $(MANDATORY), $(if $(shell which $(exec)),, $(error "No $(exec) in $(PATH)")))
+
+makedir:
 	mkdir -p bin
 
 compile:
@@ -31,4 +35,4 @@ containerize:
 	docker build -t pseudo-shell:1.0 .
 	docker tag pseudo-shell:1.0 $(DOCKER_ID_USER)/pseudo-shell:1.0
 
-build: mkdir compile shrink move compress clean containerize
+build: check makedir compile shrink move compress clean containerize
